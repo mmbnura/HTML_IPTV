@@ -151,6 +151,10 @@ Country – every country with its channel count, most common first
 
 ✕ Clear all – removes both filters
 
+India and the Indian languages (Hindi, Tamil, Bengali, Telugu, Urdu, Punjabi,
+Malayalam, Kannada, Marathi, Gujarati, …) are pinned to the top of these lists,
+separated by a divider; all others follow by channel count.
+
 Selecting an entry applies it immediately and closes the panel. Filters can be
 combined (e.g. Hindi · India), the counts update for the other filter, and the
 button shows what is active. The choice is remembered across reloads.

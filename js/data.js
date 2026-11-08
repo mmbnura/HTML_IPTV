@@ -10,6 +10,11 @@ var Data = (function () {
 
   var API = 'https://iptv-org.github.io/api/';
 
+  // the same language coded twice in iptv-org -> one entry
+  var LANG_ALIAS = { ory: 'ori', gom: 'kok' };
+  // friendlier names than the ISO 639-3 ones
+  var LANG_NAME = { ori: 'Odia', pan: 'Punjabi', kok: 'Konkani', bgc: 'Haryanvi' };
+
   var state = {
     channels: [],        // sorted by name
     byId: {},            // id -> channel
@@ -175,7 +180,10 @@ var Data = (function () {
     U.getJSON(API + 'languages.json', function (err, langs) {
       if (err || !langs) { return done(err || new Error('no languages')); }
       var i;
-      for (i = 0; i < langs.length; i++) { state.languageNames[langs[i].code] = langs[i].name; }
+      for (i = 0; i < langs.length; i++) {
+        state.languageNames[langs[i].code] = LANG_NAME[langs[i].code] ||
+          String(langs[i].name).replace(/\s*\(macrolanguage\)/i, '');
+      }
       langs = null;
       U.getJSON(API + 'feeds.json', function (err2, feeds) {
         if (err2 || !feeds) { return done(err2 || new Error('no feeds')); }
@@ -184,7 +192,8 @@ var Data = (function () {
           var fl = feeds[i].languages;
           if (!ch || !fl) { continue; }
           for (var j = 0; j < fl.length; j++) {
-            if (ch.langs.indexOf(fl[j]) === -1) { ch.langs.push(fl[j]); }
+            var lc = LANG_ALIAS[fl[j]] || fl[j];
+            if (ch.langs.indexOf(lc) === -1) { ch.langs.push(lc); }
           }
         }
         feeds = null;

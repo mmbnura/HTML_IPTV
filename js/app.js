@@ -48,6 +48,20 @@
 
   var catVL, chVL, fVL;
 
+  /* Shown first in the country / language lists (most channels first within the group). */
+  var PINNED_COUNTRIES = ['IN'];
+  var PINNED_LANGS = ['hin', 'tam', 'tel', 'mal', 'ben', 'kan', 'pan', 'mar', 'guj', 'ori', 'bho',
+    'asm', 'urd', 'kok', 'mai', 'bgc', 'hne', 'sat', 'lus', 'san', 'snd', 'kas', 'doi', 'mni',
+    'brx', 'raj', 'mag', 'awa', 'nep'];
+
+  /* Moves pinned entries (by .code) to the front and marks the last one for a divider. */
+  function pinFirst(list, pinned) {
+    var top = [], rest = [];
+    U.each(list, function (it) { (pinned.indexOf(it.code) !== -1 ? top : rest).push(it); });
+    if (top.length && rest.length) { top[top.length - 1].pinEnd = true; }
+    return top.concat(rest);
+  }
+
   /* ------------------------------------------------------------------ */
   /* Rendering                                                          */
   /* ------------------------------------------------------------------ */
@@ -82,10 +96,11 @@
   function buildCountryItems() {
     var items = [{ type: 'back', label: '◂ Back to categories', count: null }];
     items.push({ type: 'pickCountry', code: '', label: 'All countries', count: Data.state.channels.length });
+    var list = [];
     U.each(Data.state.countries, function (c) {
-      items.push({ type: 'pickCountry', code: c.code, label: c.name, count: c.count });
+      list.push({ type: 'pickCountry', code: c.code, label: c.name, count: c.count });
     });
-    return items;
+    return items.concat(pinFirst(list, PINNED_COUNTRIES));
   }
 
   function isActiveCatItem(it) {
@@ -104,6 +119,7 @@
 
   function decorateCatRow(row, it) {
     if (it.cls) { row.className += ' ' + it.cls; }
+    if (it.pinEnd) { row.className += ' pin-end'; }
     if (isActiveCatItem(it)) { row.className += ' active'; }
   }
 
@@ -307,7 +323,7 @@
     if (kind === 'lang' && !Data.state.languagesReady) { return []; }
     var f = Data.facet(kind, filters());
     var items = [{ code: '', name: kind === 'lang' ? 'Any language' : 'Any country', count: f.total }];
-    return items.concat(f.items);
+    return items.concat(pinFirst(f.items, kind === 'lang' ? PINNED_LANGS : PINNED_COUNTRIES));
   }
 
   function renderFilterTabs() {
@@ -879,6 +895,7 @@
         return app.fTab === 0 && !Data.state.languagesReady ?
           'Loading languages…<br>This takes a few seconds the first time.' : 'Nothing to choose.';
       },
+      decorate: function (row, it) { if (it.pinEnd) { row.className += ' pin-end'; } },
       onClick: function (idx) { chooseFilterItem(idx); }
     });
 
