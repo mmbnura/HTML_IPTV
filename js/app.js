@@ -12,6 +12,8 @@
     chList: $('chList'), chTitle: $('chTitle'), chCount: $('chCount'),
     playerBox: $('playerBox'), video: $('video'),
     overlay: $('overlay'), spinner: $('spinner'), overlayMsg: $('overlayMsg'),
+    ctrlBar: $('ctrlBar'), playBtn: $('playBtn'), playIcon: $('playIcon'),
+    ctrlName: $('ctrlName'), ctrlQuality: $('ctrlQuality'), liveBadge: $('liveBadge'),
     osd: $('osd'), osdNum: $('osdNum'), osdName: $('osdName'), osdMeta: $('osdMeta'),
     infoLogo: $('infoLogo'), infoName: $('infoName'), infoMeta: $('infoMeta'),
     npName: $('npName'), qualityNow: $('qualityNow'), qualityBtn: $('qualityBtn'),
@@ -23,7 +25,7 @@
 
   var app = {
     ready: false,
-    zone: 'cats',            // cats | chans | player | quality | search | menu
+    zone: 'cats',            // cats | chans | player | playbtn | quality | search | menu
     catMode: 'cats',         // cats | countries
     country: '',             // '' = all countries
     view: { type: 'cat', id: 'all' }, // what the channel list shows
@@ -187,6 +189,8 @@
     catVL.setActive(zone === 'cats');
     chVL.setActive(zone === 'chans');
     toggleClass(el.playerBox, 'focused', zone === 'player');
+    toggleClass(el.playBtn, 'focused', zone === 'playbtn');
+    toggleClass(el.body, 'ctrl-focus', zone === 'playbtn');
     toggleClass(el.qualityBtn, 'focused', zone === 'quality');
     toggleClass(el.searchBox, 'focused', zone === 'search');
   }
@@ -316,13 +320,30 @@
     el.overlayMsg.innerHTML = U.esc(text).replace(/\n/g, '<br>');
   }
 
+  function updatePlayState() {
+    var paused = Player.isPaused();
+    el.playIcon.className = paused ? 'ico-play' : 'ico-pause';
+    toggleClass(el.body, 'paused', paused);
+    toggleClass(el.body, 'has-channel', !!Player.current());
+    el.liveBadge.textContent = paused ? 'PAUSED' : 'LIVE';
+  }
+
+  function togglePause() {
+    if (!Player.current()) { toast('Choose a channel first'); return; }
+    Player.togglePause();
+    updatePlayState();
+    showOsd();
+  }
+
   function updateNowPlaying() {
     var ch = Player.current();
+    updatePlayState();
     if (!ch) {
       el.npName.textContent = '—';
       return;
     }
     el.npName.textContent = ch.name;
+    el.ctrlName.textContent = ch.name;
     el.infoLogo.innerHTML = logoHtml(ch, 'big-logo');
     el.infoName.innerHTML = U.esc(ch.name) + (Store.isFavorite(ch.id) ? ' <span class="star">★</span>' : '');
     var meta = [];
@@ -342,6 +363,7 @@
 
   function updateQuality() {
     el.qualityNow.textContent = Player.qualityText();
+    el.ctrlQuality.textContent = Player.qualityText();
     if (app.zone === 'menu') { renderMenu(); }
   }
 
@@ -483,7 +505,8 @@
     if (!app.ready) { return; }
 
     if (app.fullscreen) {
-      if (U.is(k, K.OK) || U.is(k, K.BACK) || U.is(k, K.BLUE)) { exitFullscreen(); }
+      if (U.is(k, K.PLAY_PAUSE)) { togglePause(); }
+      else if (U.is(k, K.OK) || U.is(k, K.BACK) || U.is(k, K.BLUE)) { exitFullscreen(); }
       else if (U.is(k, K.UP) || U.is(k, K.CH_UP)) { zap(-1); }
       else if (U.is(k, K.DOWN) || U.is(k, K.CH_DOWN)) { zap(1); }
       else if (U.is(k, K.RED)) { toggleFavorite(Player.current()); showOsd(); }
@@ -503,7 +526,9 @@
     }
 
     // Colour / shortcut keys work in every zone
-    if (U.is(k, K.RED)) {
+    if (U.is(k, K.PLAY_PAUSE)) {
+      togglePause();
+    } else if (U.is(k, K.RED)) {
       toggleFavorite(app.zone === 'chans' ? chVL.current() : Player.current());
     } else if (U.is(k, K.GREEN)) {
       openMenu();
@@ -526,7 +551,7 @@
       showCategories();
       setZone('cats');
     } else if (app.zone !== 'cats') {
-      setZone(app.zone === 'quality' || app.zone === 'player' ? 'chans' : 'cats');
+      setZone(app.zone === 'quality' || app.zone === 'player' || app.zone === 'playbtn' ? 'chans' : 'cats');
     }
   }
 
@@ -558,16 +583,24 @@
     if (z === 'player') {
       if (U.is(k, K.OK)) { if (Player.current()) { enterFullscreen(); } else { toast('Choose a channel first'); } }
       else if (U.is(k, K.LEFT)) { setZone('chans'); }
-      else if (U.is(k, K.DOWN)) { setZone('quality'); }
+      else if (U.is(k, K.DOWN)) { setZone(Player.current() ? 'playbtn' : 'quality'); }
       else if (U.is(k, K.UP)) { setZone('search'); }
       else if (U.is(k, K.CH_UP)) { zap(-1); }
       else if (U.is(k, K.CH_DOWN)) { zap(1); }
       else { return false; }
       return true;
     }
+    if (z === 'playbtn') {
+      if (U.is(k, K.OK)) { togglePause(); }
+      else if (U.is(k, K.UP)) { setZone('player'); }
+      else if (U.is(k, K.DOWN)) { setZone('quality'); }
+      else if (U.is(k, K.LEFT)) { setZone('chans'); }
+      else { return false; }
+      return true;
+    }
     if (z === 'quality') {
       if (U.is(k, K.OK)) { openMenu(); }
-      else if (U.is(k, K.UP)) { setZone('player'); }
+      else if (U.is(k, K.UP)) { setZone(Player.current() ? 'playbtn' : 'player'); }
       else if (U.is(k, K.LEFT)) { setZone('chans'); }
       else { return false; }
       return true;
@@ -595,6 +628,14 @@
       if (app.fullscreen) { exitFullscreen(); } else { setZone('player'); enterFullscreen(); }
     });
     el.playerBox.addEventListener('dblclick', function (e) { e.preventDefault(); });
+    // the control bar must not trigger the fullscreen toggle of the video
+    el.ctrlBar.addEventListener('click', function (e) { e.stopPropagation(); });
+    el.playBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (app.mutedNotice) { app.mutedNotice = false; Player.unmute(); }
+      togglePause();
+    });
+    el.playerBox.addEventListener('mousemove', function () { if (!app.fullscreen) { showOsd(); } });
     document.addEventListener('mousemove', function () { if (app.fullscreen) { showOsd(); } });
 
     el.qualityBtn.addEventListener('click', function () { setZone('quality'); openMenu(); });
@@ -665,6 +706,7 @@
       playing: function () { updateQuality(); },
       failed: function () { updateQuality(); },
       streamChanged: updateNowPlaying,
+      playState: updatePlayState,
       mutedAutoplay: function () {
         app.mutedNotice = true;
         toast('Autoplay was blocked – sound muted. Press any key to unmute.');

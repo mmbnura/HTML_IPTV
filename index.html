@@ -41,12 +41,21 @@
             <div id="spinner" class="spinner"></div>
             <div id="overlayMsg" class="overlay-msg">Loading channels&hellip;</div>
           </div>
+          <div id="bigPause" class="big-pause"><span class="ico-pause"></span></div>
           <div id="osd" class="osd">
             <div id="osdNum" class="osd-num"></div>
             <div class="osd-body">
               <div id="osdName" class="osd-name"></div>
               <div id="osdMeta" class="osd-meta"></div>
             </div>
+          </div>
+          <div id="ctrlBar" class="ctrl-bar">
+            <button id="playBtn" class="play-btn" type="button" title="Play / Pause">
+              <span id="playIcon" class="ico-pause"></span>
+            </button>
+            <span id="liveBadge" class="live-badge">LIVE</span>
+            <span id="ctrlName" class="ctrl-name"></span>
+            <span id="ctrlQuality" class="ctrl-quality"></span>
           </div>
         </div>
 
@@ -61,6 +70,7 @@
         <div class="hints">
           <span><i class="key">&#8593;&#8595;</i> Browse</span>
           <span><i class="key">OK</i> Play / Fullscreen</span>
+          <span><i class="key">&#9654;&#10074;&#10074;</i> Pause</span>
           <span><i class="key red"></i> Favorite</span>
           <span><i class="key green"></i> Quality</span>
           <span><i class="key yellow"></i> Search</span>

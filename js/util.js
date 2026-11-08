@@ -81,7 +81,8 @@ var U = (function () {
     OK: [13, 32],
     BACK: [27, 8, 10009, 461, 166],
     RED: [403, 70], GREEN: [404, 81], YELLOW: [405, 83], BLUE: [406],   // desktop: F, Q, S
-    CH_UP: [427, 33], CH_DOWN: [428, 34]
+    CH_UP: [427, 33], CH_DOWN: [428, 34],
+    PLAY_PAUSE: [10252, 415, 19, 179, 80]   // TV play/pause, play, pause; media key; desktop: P
   };
   function is(code, list) { return list.indexOf(code) !== -1; }
 

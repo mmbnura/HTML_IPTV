@@ -19,6 +19,7 @@ var Player = (function () {
   var stallTimer = null;
   var autoLevel = true;
   var failed = false;
+  var userPaused = false;      // paused on purpose with the play/pause button
   var levelHeight = 0;
   var START_TIMEOUT = 20000;
   var STALL_TIMEOUT = 25000;
@@ -50,7 +51,7 @@ var Player = (function () {
 
   function init(videoEl, callbacks) {
     video = videoEl;
-    cb = callbacks;              // {status, quality, playing, failed, streamChanged, mutedAutoplay}
+    cb = callbacks;              // {status, quality, playing, failed, streamChanged, mutedAutoplay, playState}
     video.controls = false;
 
     video.addEventListener('playing', function () {
@@ -70,12 +71,14 @@ var Player = (function () {
     video.addEventListener('error', function () {
       if (mode === 'native' && channel) { nextStream('Stream error'); }
     });
-    // Live TV is never paused by the UI; if something pauses it, resume.
+    // Live TV keeps playing unless the user paused it; if something else pauses it, resume.
     video.addEventListener('pause', function () {
-      if (channel && !failed && !video.ended) {
-        setTimeout(function () { if (channel && !failed && video.paused) { safePlay(); } }, 300);
+      cb.playState();
+      if (channel && !failed && !userPaused && !video.ended) {
+        setTimeout(function () { if (channel && !failed && !userPaused && video.paused) { safePlay(); } }, 300);
       }
     });
+    video.addEventListener('play', function () { cb.playState(); });
   }
 
   function armStallWatch(on) {
@@ -118,6 +121,7 @@ var Player = (function () {
     destroy();
     channel = ch;
     failed = false;
+    userPaused = false;
     streamIdx = 0;
     start();
   }
@@ -217,6 +221,30 @@ var Player = (function () {
     }
   }
 
+  /* ---- play / pause ---- */
+
+  function togglePause() {
+    if (!channel || failed) { return; }
+    if (userPaused || video.paused) {
+      userPaused = false;
+      armStallWatch(false);
+      // after a long pause the position may have dropped out of the live window
+      if (hls && hls.liveSyncPosition && video.currentTime < hls.liveSyncPosition - 60) {
+        video.currentTime = hls.liveSyncPosition;
+      }
+      safePlay();
+    } else {
+      userPaused = true;
+      armStallWatch(false);
+      video.pause();
+    }
+    cb.playState();
+  }
+
+  function isPaused() {
+    return !!channel && !failed && (userPaused || video.paused);
+  }
+
   /* ---- quality ---- */
 
   function levels() {
@@ -263,6 +291,7 @@ var Player = (function () {
   return {
     init: init, play: play, stop: stop, levels: levels, setLevel: setLevel,
     currentLevelIndex: currentLevelIndex, qualityText: qualityText,
+    togglePause: togglePause, isPaused: isPaused,
     current: function () { return channel; },
     streamInfo: function () { return channel ? { index: streamIdx, total: channel.streams.length } : null; },
     unmute: function () { video.muted = false; }

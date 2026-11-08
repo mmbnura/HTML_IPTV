@@ -128,6 +128,7 @@ Designed for TV remote navigation (↑ ↓ OK)
 | ↑ ↓ | ↑ ↓ | Move in a list (in fullscreen: previous / next channel) |
 | ← → | ← → | Move between Categories · Channels · Player |
 | OK | Enter | Play channel / toggle fullscreen |
+| ▶❚❚ Play/Pause | P | Pause / resume (or focus the ▶ button on the video's bottom bar and press OK) |
 | BACK | Esc / Backspace | Exit fullscreen, close menu, go back |
 | CH+ / CH− | PgUp / PgDn | Page through lists, zap channels |
 | 🔴 Red | F | Add / remove favorite |
@@ -135,7 +136,8 @@ Designed for TV remote navigation (↑ ↓ OK)
 | 🟡 Yellow | S | Search |
 | 🔵 Blue | — | Fullscreen |
 
-Mouse / touch also work: click a channel to play, click ☆ to favorite, click the video for fullscreen.
+Mouse / touch also work: click a channel to play, click ☆ to favorite, click the video for fullscreen,
+click the ▶/❚❚ button in the bar at the bottom of the video to pause or resume.
 
 🌐 Country filter
 
