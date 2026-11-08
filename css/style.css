@@ -685,3 +685,12 @@ body.fs.paused .osd { display: flex; }
   white-space: nowrap;
 }
 .filter-foot span { margin-right: 1.1rem; }
+
+/* divider under the pinned group (India / Indian languages) */
+.row.pin-end:after {
+  content: "";
+  position: absolute;
+  left: 0.6rem; right: 0.6rem; bottom: -0.2rem;
+  height: 1px;
+  background: #3a4a63;
+}
