@@ -121,6 +121,58 @@ UI controls auto-hide in fullscreen
 
 Designed for TV remote navigation (↑ ↓ OK)
 
+🎮 Remote Control & Keyboard
+
+| Remote key | Keyboard | Action |
+|---|---|---|
+| ↑ ↓ | ↑ ↓ | Move in a list (in fullscreen: previous / next channel) |
+| ← → | ← → | Move between Categories · Channels · Player |
+| OK | Enter | Play channel / toggle fullscreen |
+| BACK | Esc / Backspace | Exit fullscreen, close menu, go back |
+| CH+ / CH− | PgUp / PgDn | Page through lists, zap channels |
+| 🔴 Red | F | Add / remove favorite |
+| 🟢 Green | Q | Quality menu |
+| 🟡 Yellow | S | Search |
+| 🔵 Blue | — | Fullscreen |
+
+Mouse / touch also work: click a channel to play, click ☆ to favorite, click the video for fullscreen.
+
+🌐 Country filter
+
+The Categories panel has a "Country" entry. Pick a country and every category
+is filtered to that country (the choice is remembered).
+
+🗂 Project Structure
+
+```
+index.html        App shell (three-column layout + status bar)
+css/style.css     TV-optimised styles (auto-scaled to any screen size)
+js/util.js        Helpers: XHR JSON loader, key codes, UI scaling
+js/storage.js     localStorage: favorites + last category/country/channel
+js/data.js        iptv-org download, HLS stream filtering, search, filters
+js/vlist.js       Virtualised list (smooth with 10 000+ channels on TVs)
+js/player.js      hls.js / native HLS playback, recovery, quality control
+js/app.js         UI rendering, focus navigation, remote keys, fullscreen
+lib/hls.min.js    Hls.js 1.5.20 (bundled, no CDN needed)
+```
+
+All JavaScript is written in ES5 (no build step) so it runs on older
+Samsung Tizen and LG webOS browsers.
+
+▶️ Running
+
+Serve the folder with any static web server, e.g.
+
+```bash
+python3 -m http.server 8080
+```
+
+then open http://localhost:8080 (or the GitHub Pages URL on the TV browser).
+
+Note: when the page is served over HTTPS (GitHub Pages), plain `http://`
+streams are hidden because browsers block mixed content. Serving over
+plain HTTP on your local network shows more channels.
+
 📡 IPTV Data Source
 
 MMB Player uses the public iptv-org datasets:
