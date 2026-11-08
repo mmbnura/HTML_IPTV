@@ -128,19 +128,36 @@ Designed for TV remote navigation (↑ ↓ OK)
 | ↑ ↓ | ↑ ↓ | Move in a list (in fullscreen: previous / next channel) |
 | ← → | ← → | Move between Categories · Channels · Player |
 | OK | Enter | Play channel / toggle fullscreen |
+| ▶❚❚ Play/Pause | P | Pause / resume (or focus the ▶ button on the video's bottom bar and press OK) |
 | BACK | Esc / Backspace | Exit fullscreen, close menu, go back |
 | CH+ / CH− | PgUp / PgDn | Page through lists, zap channels |
 | 🔴 Red | F | Add / remove favorite |
 | 🟢 Green | Q | Quality menu |
 | 🟡 Yellow | S | Search |
 | 🔵 Blue | — | Fullscreen |
+| ↑ to search, → | ↑ to search, → | Focus the Filter button, OK opens the filter panel |
 
-Mouse / touch also work: click a channel to play, click ☆ to favorite, click the video for fullscreen.
+Mouse / touch also work: click a channel to play, click ☆ to favorite, click the video for fullscreen,
+click the ▶/❚❚ button in the bar at the bottom of the video to pause or resume.
 
-🌐 Country filter
+🎚 Filters (Language & Country)
 
-The Categories panel has a "Country" entry. Pick a country and every category
-is filtered to that country (the choice is remembered).
+A Filter button sits to the right of the search box. It opens a panel where
+everything is picked from lists, with no typing needed:
+
+Language – every language with its channel count, most common first
+
+Country – every country with its channel count, most common first
+
+✕ Clear all – removes both filters
+
+Selecting an entry applies it immediately and closes the panel. Filters can be
+combined (e.g. Hindi · India), the counts update for the other filter, and the
+button shows what is active. The choice is remembered across reloads.
+The Country entry in the Categories panel controls the same country filter.
+
+Language data comes from iptv-org's feeds.json and loads in the background a
+few seconds after the channel list appears.
 
 🗂 Project Structure
 

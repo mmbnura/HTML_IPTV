@@ -15,7 +15,10 @@ var Data = (function () {
     byId: {},            // id -> channel
     categories: [],      // [{id, name, count}] sorted by name
     countries: [],       // [{code, name, flag, count}] sorted by name
-    countryNames: {}     // code -> name
+    countryNames: {},    // code -> name
+    languages: [],       // [{code, name, count}] most channels first (filled by loadLanguages)
+    languageNames: {},   // code -> name
+    languagesReady: false
   };
 
   function qualityHeight(q) {
@@ -73,6 +76,7 @@ var Data = (function () {
           country: m ? m.country : '',
           cats: cats,
           alt: m && m.alt_names ? m.alt_names.join(' ') : '',
+          langs: [],
           streams: [],
           urls: {},
           logo: null
@@ -163,6 +167,77 @@ var Data = (function () {
     });
   }
 
+  /*
+   * Languages come from feeds.json (one channel has one or more feeds, each
+   * with its languages). It is a big file, so it loads in the background.
+   */
+  function loadLanguages(done) {
+    U.getJSON(API + 'languages.json', function (err, langs) {
+      if (err || !langs) { return done(err || new Error('no languages')); }
+      var i;
+      for (i = 0; i < langs.length; i++) { state.languageNames[langs[i].code] = langs[i].name; }
+      langs = null;
+      U.getJSON(API + 'feeds.json', function (err2, feeds) {
+        if (err2 || !feeds) { return done(err2 || new Error('no feeds')); }
+        for (i = 0; i < feeds.length; i++) {
+          var ch = state.byId[feeds[i].channel];
+          var fl = feeds[i].languages;
+          if (!ch || !fl) { continue; }
+          for (var j = 0; j < fl.length; j++) {
+            if (ch.langs.indexOf(fl[j]) === -1) { ch.langs.push(fl[j]); }
+          }
+        }
+        feeds = null;
+        var counts = {};
+        for (i = 0; i < state.channels.length; i++) {
+          var cl = state.channels[i].langs;
+          for (var k = 0; k < cl.length; k++) { counts[cl[k]] = (counts[cl[k]] || 0) + 1; }
+        }
+        for (var code in counts) {
+          if (counts.hasOwnProperty(code)) {
+            state.languages.push({ code: code, name: state.languageNames[code] || code, count: counts[code] });
+          }
+        }
+        state.languages.sort(function (a, b) { return b.count - a.count; });
+        state.languagesReady = true;
+        done(null);
+      }, 120000);
+    });
+  }
+
+  function matches(c, f) {
+    if (f.country && c.country !== f.country) { return false; }
+    if (f.lang && c.langs.indexOf(f.lang) === -1) { return false; }
+    return true;
+  }
+
+  /* channel counts per language (kind 'lang') or per country (kind 'country')
+     honouring the *other* filter, most channels first */
+  function facet(kind, f) {
+    var counts = {};
+    var total = 0;
+    var i, j;
+    for (i = 0; i < state.channels.length; i++) {
+      var c = state.channels[i];
+      if (kind === 'lang') {
+        if (f.country && c.country !== f.country) { continue; }
+        total++;
+        for (j = 0; j < c.langs.length; j++) { counts[c.langs[j]] = (counts[c.langs[j]] || 0) + 1; }
+      } else {
+        if (f.lang && c.langs.indexOf(f.lang) === -1) { continue; }
+        total++;
+        if (c.country) { counts[c.country] = (counts[c.country] || 0) + 1; }
+      }
+    }
+    var names = kind === 'lang' ? state.languageNames : state.countryNames;
+    var out = [];
+    for (var code in counts) {
+      if (counts.hasOwnProperty(code)) { out.push({ code: code, name: names[code] || code, count: counts[code] }); }
+    }
+    out.sort(function (a, b) { return b.count - a.count || (a.name < b.name ? -1 : 1); });
+    return { items: out, total: total };
+  }
+
   function search(text) {
     var q = String(text || '').toLowerCase().replace(/^\s+|\s+$/g, '');
     if (!q) { return []; }
@@ -186,23 +261,23 @@ var Data = (function () {
   }
 
   function filter(opts) {
-    // opts: {category: id|'all', country: code|''}
+    // opts: {category: id|'all', country: code|'', lang: code|''}
     var out = [];
     for (var i = 0; i < state.channels.length; i++) {
       var c = state.channels[i];
-      if (opts.country && c.country !== opts.country) { continue; }
+      if (!matches(c, opts)) { continue; }
       if (opts.category && opts.category !== 'all' && c.cats.indexOf(opts.category) === -1) { continue; }
       out.push(c);
     }
     return out;
   }
 
-  function categoryCounts(country) {
+  function categoryCounts(f) {
     var counts = {};
     var total = 0;
     for (var i = 0; i < state.channels.length; i++) {
       var c = state.channels[i];
-      if (country && c.country !== country) { continue; }
+      if (!matches(c, f)) { continue; }
       total++;
       for (var j = 0; j < c.cats.length; j++) { counts[c.cats[j]] = (counts[c.cats[j]] || 0) + 1; }
     }
@@ -211,7 +286,7 @@ var Data = (function () {
   }
 
   return {
-    state: state, load: load, loadLogos: loadLogos,
+    state: state, load: load, loadLogos: loadLogos, loadLanguages: loadLanguages, facet: facet,
     search: search, filter: filter, categoryCounts: categoryCounts,
     qualityHeight: qualityHeight
   };
