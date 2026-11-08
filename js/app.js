@@ -19,15 +19,21 @@
     npName: $('npName'), qualityNow: $('qualityNow'), qualityBtn: $('qualityBtn'),
     qualityMenu: $('qualityMenu'), qualityList: $('qualityList'),
     searchBox: $('searchBox'), searchInput: $('searchInput'),
+    filterBtn: $('filterBtn'), filterLabel: $('filterLabel'),
+    filterPanel: $('filterPanel'), filterTabs: $('filterTabs'), filterList: $('filterList'),
     statChannels: $('statChannels'), statCategories: $('statCategories'),
     clock: $('clock'), toast: $('toast')
   };
 
   var app = {
     ready: false,
-    zone: 'cats',            // cats | chans | player | playbtn | quality | search | menu
+    zone: 'cats',            // cats | chans | player | playbtn | quality | search | filterBtn | filter | menu
     catMode: 'cats',         // cats | countries
     country: '',             // '' = all countries
+    lang: '',                // '' = all languages
+    pendingLang: '',         // remembered language, applied once languages have loaded
+    fTab: 0,                 // filter panel: 0 language, 1 country, 2 clear
+    fPane: 'list',           // filter panel focus: tabs | list
     view: { type: 'cat', id: 'all' }, // what the channel list shows
     lastQuery: '',
     searchResults: [],
@@ -40,7 +46,7 @@
     mutedNotice: false
   };
 
-  var catVL, chVL;
+  var catVL, chVL, fVL;
 
   /* ------------------------------------------------------------------ */
   /* Rendering                                                          */
@@ -50,9 +56,17 @@
     return code ? (Data.state.countryNames[code] || code) : '';
   }
 
+  function langName(code) {
+    return code ? (Data.state.languageNames[code] || code) : '';
+  }
+
+  function filters() {
+    return { country: app.country, lang: app.lang };
+  }
+
   function buildCategoryItems() {
     var items = [];
-    var counts = Data.categoryCounts(app.country);
+    var counts = Data.categoryCounts(filters());
     items.push({ type: 'fav', label: '★ Favorites', count: Store.favoriteIds().length, cls: 'fav-entry' });
     if (app.lastQuery) {
       items.push({ type: 'search', label: '🔍 “' + app.lastQuery + '”', count: app.searchResults.length });
@@ -130,7 +144,7 @@
       return list;
     }
     if (v.type === 'search') { return app.searchResults; }
-    return Data.filter({ category: v.id, country: app.country });
+    return Data.filter({ category: v.id, country: app.country, lang: app.lang });
   }
 
   function viewTitle() {
@@ -141,7 +155,7 @@
     if (v.id !== 'all') {
       U.each(Data.state.categories, function (c) { if (c.id === v.id) { name = c.name; } });
     }
-    return name + (app.country ? ' · ' + countryName(app.country) : '');
+    return name + (app.lang ? ' · ' + langName(app.lang) : '') + (app.country ? ' · ' + countryName(app.country) : '');
   }
 
   function showCategories(focusIdx) {
@@ -193,6 +207,7 @@
     toggleClass(el.body, 'ctrl-focus', zone === 'playbtn');
     toggleClass(el.qualityBtn, 'focused', zone === 'quality');
     toggleClass(el.searchBox, 'focused', zone === 'search');
+    toggleClass(el.filterBtn, 'focused', zone === 'filterBtn');
   }
 
   function toggleClass(node, cls, on) {
@@ -218,19 +233,143 @@
       return;
     }
     if (it.type === 'pickCountry') {
-      app.country = it.code;
       app.catMode = 'cats';
-      if (app.view.type !== 'cat') { app.view = { type: 'cat', id: 'all' }; }
-      // the selected category may not exist in the new country
-      var counts = Data.categoryCounts(app.country);
-      if (!counts[app.view.id]) { app.view = { type: 'cat', id: 'all' }; }
-      selectView(app.view);
-      showCategories();
+      setFilter('country', it.code, true);
       return;
     }
     if (it.type === 'fav') { selectView({ type: 'fav' }); }
     else if (it.type === 'search') { selectView({ type: 'search' }); }
     else { selectView({ type: 'cat', id: it.id }); }
+    if (chVL.items.length) { setZone('chans'); }
+  }
+
+  /* Apply a language / country filter. kind: 'lang' | 'country' | 'clear' */
+  function setFilter(kind, code, quiet) {
+    if (kind === 'clear') { app.lang = ''; app.country = ''; }
+    else if (kind === 'lang') { app.lang = code; }
+    else { app.country = code; }
+    app.pendingLang = '';
+    Store.setState({ lang: app.lang, country: app.country });
+    if (app.view.type === 'search') { app.view = { type: 'cat', id: 'all' }; }
+    // the selected category may not exist with the new filters
+    if (app.view.type === 'cat' && !Data.categoryCounts(filters())[app.view.id]) {
+      app.view = { type: 'cat', id: 'all' };
+    }
+    updateFilterLabel();
+    selectView(app.view);
+    showCategories();
+    if (!quiet) {
+      toast(kind === 'clear' ? 'All filters cleared' :
+        'Showing ' + chVL.items.length + ' channels' + filterText(' in '));
+    }
+  }
+
+  function filterText(prefix) {
+    var parts = [];
+    if (app.lang) { parts.push(langName(app.lang)); }
+    if (app.country) { parts.push(countryName(app.country)); }
+    return parts.length ? prefix + parts.join(' · ') : '';
+  }
+
+  function updateFilterLabel() {
+    var t = filterText('');
+    el.filterLabel.textContent = t || 'Filter';
+    toggleClass(el.filterBtn, 'active', !!t);
+  }
+
+  /* ---- filter panel ---- */
+
+  function openFilter() {
+    if (!app.ready) { return; }
+    app.prevZone = app.zone === 'filter' ? app.prevZone : app.zone;
+    app.fTab = app.fTab === 1 ? 1 : 0;
+    app.fPane = 'list';
+    el.filterPanel.className = 'modal';
+    setZone('filter');
+    renderFilter();
+  }
+
+  function closeFilter() {
+    el.filterPanel.className = 'modal hidden';
+    setZone(app.prevZone === 'filter' ? 'chans' : (app.prevZone || 'filterBtn'));
+  }
+
+  function filterTabs() {
+    return [
+      { label: 'Language', value: app.lang ? langName(app.lang) : 'Any' },
+      { label: 'Country', value: app.country ? countryName(app.country) : 'Any' },
+      { label: '✕ Clear all', value: '' }
+    ];
+  }
+
+  function filterItems() {
+    var kind = app.fTab === 1 ? 'country' : 'lang';
+    if (kind === 'lang' && !Data.state.languagesReady) { return []; }
+    var f = Data.facet(kind, filters());
+    var items = [{ code: '', name: kind === 'lang' ? 'Any language' : 'Any country', count: f.total }];
+    return items.concat(f.items);
+  }
+
+  function renderFilterTabs() {
+    var html = '';
+    U.each(filterTabs(), function (t, i) {
+      var cls = 'ftab' + (i === app.fTab ? ' current' : '') + (i === 2 ? ' clear' : '') +
+        (app.fPane === 'tabs' && i === app.fTab ? ' focused' : '');
+      html += '<div class="' + cls + '" data-ft="' + i + '"><span class="ftab-label">' + U.esc(t.label) + '</span>' +
+        (t.value ? '<span class="ftab-value">' + U.esc(t.value) + '</span>' : '') + '</div>';
+    });
+    el.filterTabs.innerHTML = html;
+  }
+
+  function renderFilter() {
+    renderFilterTabs();
+    var items = filterItems();
+    var cur = app.fTab === 1 ? app.country : app.lang;
+    var focus = 0;
+    for (var i = 0; i < items.length; i++) { if (items[i].code === cur) { focus = i; break; } }
+    fVL.setItems(items, focus);
+    fVL.setActive(app.fPane === 'list');
+  }
+
+  function filterSwitchTab(i) {
+    app.fTab = i;
+    if (i === 2) { renderFilterTabs(); return; }
+    renderFilter();
+  }
+
+  function filterKey(k) {
+    var K = U.K;
+    if (U.is(k, K.BACK)) { closeFilter(); return true; }
+    if (app.fPane === 'tabs') {
+      if (U.is(k, K.UP)) { filterSwitchTab(Math.max(0, app.fTab - 1)); }
+      else if (U.is(k, K.DOWN)) { filterSwitchTab(Math.min(2, app.fTab + 1)); }
+      else if (U.is(k, K.RIGHT) || U.is(k, K.OK)) {
+        if (app.fTab === 2) {
+          if (U.is(k, K.OK)) { setFilter('clear', ''); closeFilter(); }
+        } else {
+          app.fPane = 'list';
+          renderFilterTabs();
+          fVL.setActive(true);
+        }
+      } else { return false; }
+      return true;
+    }
+    if (U.is(k, K.UP)) { fVL.move(-1); }
+    else if (U.is(k, K.DOWN)) { fVL.move(1); }
+    else if (U.is(k, K.CH_UP)) { fVL.move(-fVL.pageSize()); }
+    else if (U.is(k, K.CH_DOWN)) { fVL.move(fVL.pageSize()); }
+    else if (U.is(k, K.LEFT)) { app.fPane = 'tabs'; fVL.setActive(false); renderFilterTabs(); }
+    else if (U.is(k, K.RIGHT)) { filterSwitchTab(app.fTab === 0 ? 1 : 0); }
+    else if (U.is(k, K.OK)) { chooseFilterItem(fVL.focus); }
+    else { return false; }
+    return true;
+  }
+
+  function chooseFilterItem(idx) {
+    var it = fVL.items[idx];
+    if (!it) { return; }
+    setFilter(app.fTab === 1 ? 'country' : 'lang', it.code);
+    closeFilter();
     if (chVL.items.length) { setZone('chans'); }
   }
 
@@ -525,6 +664,11 @@
       return;
     }
 
+    if (app.zone === 'filter') {
+      if (filterKey(k)) { e.preventDefault(); }
+      return;
+    }
+
     // Colour / shortcut keys work in every zone
     if (U.is(k, K.PLAY_PAUSE)) {
       togglePause();
@@ -609,6 +753,14 @@
       if (U.is(k, K.OK)) { el.searchInput.focus(); }
       else if (U.is(k, K.DOWN)) { setZone('chans'); }
       else if (U.is(k, K.LEFT)) { setZone('cats'); }
+      else if (U.is(k, K.RIGHT)) { setZone('filterBtn'); }
+      else { return false; }
+      return true;
+    }
+    if (z === 'filterBtn') {
+      if (U.is(k, K.OK)) { openFilter(); }
+      else if (U.is(k, K.DOWN)) { setZone('chans'); }
+      else if (U.is(k, K.LEFT)) { setZone('search'); }
       else if (U.is(k, K.RIGHT)) { setZone('player'); }
       else { return false; }
       return true;
@@ -645,6 +797,19 @@
       else if (e.target === el.qualityMenu) { closeMenu(); }
     });
     el.searchInput.addEventListener('focus', function () { setZone('search'); });
+
+    el.filterBtn.addEventListener('click', function () { setZone('filterBtn'); openFilter(); });
+    el.filterTabs.addEventListener('click', function (e) {
+      var t = U.closest(e.target, 'data-ft', el.filterTabs);
+      if (!t) { return; }
+      var i = parseInt(t.getAttribute('data-ft'), 10);
+      if (i === 2) { setFilter('clear', ''); closeFilter(); return; }
+      app.fPane = 'list';
+      filterSwitchTab(i);
+    });
+    el.filterPanel.addEventListener('click', function (e) {
+      if (e.target === el.filterPanel) { closeFilter(); }
+    });
   }
 
   /* ------------------------------------------------------------------ */
@@ -654,8 +819,10 @@
   function restore() {
     var s = Store.getState();
     if (s.country && Data.state.countryNames[s.country]) { app.country = s.country; }
+    app.pendingLang = s.lang || '';   // languages arrive later (see boot)
     if (s.view && (s.view.type === 'fav' || s.view.type === 'cat')) { app.view = s.view; }
-    if (app.view.type === 'cat' && !Data.categoryCounts(app.country)[app.view.id]) {
+    if (s.view && s.view.type === 'cat') { app.pendingView = s.view; }
+    if (app.view.type === 'cat' && !Data.categoryCounts(filters())[app.view.id]) {
       app.view = { type: 'cat', id: 'all' };
     }
     if (app.view.type === 'fav' && !Store.favoriteIds().length) {
@@ -700,6 +867,21 @@
       }
     });
 
+    fVL = new VList(el.filterList, {
+      rowRem: 2.6,
+      className: 'f-row',
+      render: function (it) {
+        var cur = app.fTab === 1 ? app.country : app.lang;
+        return '<span class="f-check">' + (it.code === cur ? '✓' : '') + '</span>' +
+          '<span class="cat-label">' + U.esc(it.name) + '</span><span class="cat-count">' + it.count + '</span>';
+      },
+      empty: function () {
+        return app.fTab === 0 && !Data.state.languagesReady ?
+          'Loading languages…<br>This takes a few seconds the first time.' : 'Nothing to choose.';
+      },
+      onClick: function (idx) { chooseFilterItem(idx); }
+    });
+
     Player.init(el.video, {
       status: setStatus,
       quality: updateQuality,
@@ -737,9 +919,22 @@
       setStatus('Select a channel to start watching', 'info');
       restore();
       setZone(chVL.items.length ? 'chans' : 'cats');
-      Data.loadLogos(function () {
-        chVL.refresh();
-        updateNowPlaying();
+      updateFilterLabel();
+      // languages first (needed by the filter), then logos
+      Data.loadLanguages(function (lerr) {
+        if (lerr && window.console) { console.error(lerr); }
+        if (!lerr && app.pendingLang && Data.state.languageNames[app.pendingLang]) {
+          var keep = app.pendingView;
+          app.lang = app.pendingLang;
+          if (keep && app.view.type === 'cat') { app.view = keep; }
+          setFilter('lang', app.lang, true);
+        }
+        app.pendingView = null;
+        if (app.zone === 'filter') { renderFilter(); }
+        Data.loadLogos(function () {
+          chVL.refresh();
+          updateNowPlaying();
+        });
       });
     });
   }

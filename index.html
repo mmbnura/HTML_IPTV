@@ -18,6 +18,9 @@
         <input id="searchInput" type="text" placeholder="Search channels &ndash; press OK / Enter"
                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </div>
+      <button id="filterBtn" class="filter-btn" type="button" title="Filter channels by language / country">
+        <span class="ico-filter"></span><span id="filterLabel" class="filter-label">Filter</span>
+      </button>
       <div class="stats"><span id="statChannels">0</span> channels &middot; <span id="statCategories">0</span> categories</div>
       <div id="clock" class="clock">--:--</div>
     </header>
@@ -93,6 +96,23 @@
       <div class="modal-card">
         <div class="modal-title">Video quality</div>
         <div id="qualityList" class="modal-list"></div>
+      </div>
+    </div>
+
+    <!-- Filter panel: everything is picked from lists, no typing needed -->
+    <div id="filterPanel" class="modal hidden">
+      <div class="modal-card filter-card">
+        <div class="modal-title">Filter channels</div>
+        <div class="filter-body">
+          <div id="filterTabs" class="filter-tabs"></div>
+          <div id="filterList" class="vlist filter-list"></div>
+        </div>
+        <div class="filter-foot">
+          <span><i class="key">&#8593;&#8595;</i> Choose</span>
+          <span><i class="key">&#8592;&#8594;</i> Language / Country</span>
+          <span><i class="key">OK</i> Apply</span>
+          <span><i class="key">BACK</i> Close</span>
+        </div>
       </div>
     </div>
 
