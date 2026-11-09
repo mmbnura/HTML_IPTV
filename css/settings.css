@@ -1,0 +1,158 @@
+/* MMB Player - settings page (loaded after style.css) */
+
+.page-title {
+  margin-left: 2rem;
+  padding-left: 2rem;
+  border-left: 1px solid #2a3548;
+  font-size: 1.4rem;
+  color: #cfd8e6;
+}
+.topbar .clock { margin-left: auto; }
+
+.settings-main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  padding: 1.2rem 1.6rem;
+}
+
+.settings-list {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 0 1rem 2rem 0;
+}
+.settings-list::-webkit-scrollbar { width: 0.4rem; }
+.settings-list::-webkit-scrollbar-thumb { background: #2a3548; border-radius: 0.2rem; }
+
+.set-header {
+  margin: 1.4rem 0 0.6rem;
+  padding-left: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #3ea6ff;
+}
+.set-header:first-child { margin-top: 0.2rem; }
+
+.set-row {
+  display: flex;
+  align-items: center;
+  min-height: 4rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.6rem 0.5rem 1.2rem;
+  border-radius: 0.7rem;
+  background: rgba(22, 30, 44, 0.85);
+  border: 2px solid #1d2636;
+}
+.set-row.row-focus { border-color: #2f6ea3; background: #172238; }
+.set-label { flex: 1; min-width: 0; font-size: 1.1rem; }
+.set-help { margin-top: 0.2rem; font-size: 0.8rem; color: #8a96ab; }
+
+.set-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.8rem;
+  min-width: 3rem;
+  margin-left: 0.6rem;
+  padding: 0 1.1rem;
+  border-radius: 0.5rem;
+  border: 2px solid #2a3548;
+  background: #1c2536;
+  font-size: 1rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.set-cell:hover { background: #24304a; }
+.set-cell.assign { min-width: 18rem; }
+.set-cell.option { min-width: 22rem; justify-content: space-between; }
+.set-cell.clear { color: #ff8a80; }
+.set-cell.disabled { opacity: 0.35; }
+.set-cell.button { flex: 1; margin-left: 0; justify-content: flex-start; }
+.set-cell.button.confirm { color: #ffc107; border-color: #ffc107; }
+.set-row.primary .set-cell.button { color: #3ea6ff; }
+.set-row.btn-row { padding-left: 0.6rem; }
+.set-cell.focused {
+  background: #3ea6ff;
+  border-color: #9fd3ff;
+  color: #04121f;
+  box-shadow: 0 0.2rem 1rem rgba(62, 166, 255, 0.35);
+}
+.set-cell.focused .muted, .set-cell.focused .code, .set-cell.focused .arrow { color: #0d2c48; }
+.set-row.primary .set-cell.button.focused { color: #04121f; }
+.arrow { color: #6b778c; padding: 0 0.4rem; }
+.muted { color: #8a96ab; }
+.code { margin-left: 0.4rem; font-size: 0.8rem; color: #8a96ab; }
+
+/* side panel */
+.settings-side {
+  width: 26rem;
+  flex-shrink: 0;
+  margin-left: 1.2rem;
+  padding: 1.2rem;
+  border-radius: 0.8rem;
+  background: rgba(22, 30, 44, 0.85);
+  border: 1px solid #1d2636;
+  overflow: hidden;
+}
+.side-title {
+  margin: 0.4rem 0 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8a96ab;
+}
+.side-text { font-size: 0.85rem; color: #aab5c7; line-height: 1.5; }
+.side-text p { margin-bottom: 0.6rem; }
+.last-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 5.5rem;
+  margin: 0.8rem 0 1.4rem;
+  border-radius: 0.6rem;
+  background: #111827;
+  border: 1px dashed #2a3548;
+  font-size: 1.3rem;
+  color: #cfd8e6;
+}
+.last-key .code { margin: 0.3rem 0 0; }
+
+.hint-inline { margin-left: 1.2rem; font-size: 0.8rem; color: #8a96ab; }
+
+/* capture dialog */
+.capture-card { width: 36rem; text-align: center; padding: 2rem; }
+.capture-card .modal-title { font-size: 1.4rem; }
+.cap-icon {
+  position: relative;
+  width: 5rem; height: 5rem;
+  margin: 1.2rem auto;
+  border-radius: 50%;
+  background: #12324f;
+  border: 3px solid #3ea6ff;
+}
+.cap-pulse {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 1.6rem; height: 1.6rem;
+  margin: -0.8rem 0 0 -0.8rem;
+  border-radius: 50%;
+  background: #3ea6ff;
+  -webkit-animation: pulse 1.1s ease-in-out infinite;
+  animation: pulse 1.1s ease-in-out infinite;
+}
+.cap-icon.ok { background: #143a22; border-color: #4cd964; }
+.cap-icon.ok .cap-pulse { background: #4cd964; -webkit-animation: none; animation: none; }
+.cap-icon.warn { background: #3d3010; border-color: #ffc107; }
+.cap-icon.warn .cap-pulse { background: #ffc107; }
+.cap-icon.fail { background: #3d1614; border-color: #e53935; }
+.cap-icon.fail .cap-pulse { background: #e53935; -webkit-animation: none; animation: none; }
+@-webkit-keyframes pulse { 50% { -webkit-transform: scale(1.8); opacity: 0.4; } }
+@keyframes pulse { 50% { transform: scale(1.8); opacity: 0.4; } }
+.cap-msg { font-size: 1.2rem; line-height: 1.5; }
+.cap-sub { margin-top: 0.8rem; font-size: 0.9rem; color: #8a96ab; line-height: 1.5; }

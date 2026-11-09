@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0f17">
+  <title>MMB Player – Settings</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/settings.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-icon">&#9654;</span>MMB <b>Player</b></div>
+      <div class="page-title">Settings</div>
+      <div id="clock" class="clock">--:--</div>
+    </header>
+
+    <main class="settings-main">
+      <div id="settingsList" class="settings-list"></div>
+      <div class="settings-side">
+        <div class="side-title">Button tester</div>
+        <div class="side-text">Every button the TV sends to this page is shown here.</div>
+        <div id="lastKey" class="last-key">Press any button…</div>
+        <div class="side-title">Tips</div>
+        <div class="side-text">
+          <p>Choose an action and press <i class="key">OK</i>, then press the remote button you want to use.</p>
+          <p>If nothing happens when you press a button, your TV keeps that button for itself and does not pass it to web pages. Pick a different button, e.g. a colour or number button.</p>
+          <p>Arrows, OK and Back are needed to move around and can't be assigned.</p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="statusbar">
+      <div class="np"><span class="np-label">Changes are saved automatically on this TV.</span></div>
+      <div class="sb-right">
+        <span class="hint-inline"><i class="key">&#8593;&#8595;</i> Choose</span>
+        <span class="hint-inline"><i class="key">&#8592;&#8594;</i> Change</span>
+        <span class="hint-inline"><i class="key">OK</i> Select</span>
+        <span class="hint-inline"><i class="key">BACK</i> Back to player</span>
+      </div>
+    </footer>
+
+    <!-- "Press a button" dialog -->
+    <div id="capture" class="modal hidden">
+      <div class="modal-card capture-card">
+        <div id="capTitle" class="modal-title">Next channel</div>
+        <div id="capIcon" class="cap-icon"><span class="cap-pulse"></span></div>
+        <div id="capMsg" class="cap-msg">Press the button you want to use…</div>
+        <div id="capSub" class="cap-sub">Press BACK to cancel</div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <script src="js/util.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>

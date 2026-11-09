@@ -19,7 +19,8 @@ var Player = (function () {
   var stallTimer = null;
   var autoLevel = true;
   var failed = false;
-  var userPaused = false;      // paused on purpose with the play/pause button
+  var userPaused = false;
+  var maxHeight = 0;           // settings: highest resolution Auto may use (0 = no limit)      // paused on purpose with the play/pause button
   var levelHeight = 0;
   var START_TIMEOUT = 20000;
   var STALL_TIMEOUT = 25000;
@@ -163,6 +164,7 @@ var Player = (function () {
 
     hls.on(H.Events.MANIFEST_PARSED, function () {
       if (my !== hls) { return; }
+      hls.autoLevelCapping = capIndex();
       cb.quality();
       safePlay();
     });
@@ -267,8 +269,22 @@ var Player = (function () {
     return out;
   }
 
+  /* index of the best level allowed by the quality setting (-1 = no cap) */
+  function capIndex() {
+    if (!maxHeight || !hls || !hls.levels || !hls.levels.length) { return -1; }
+    var best = -1, bestH = 0, lowest = 0;
+    for (var i = 0; i < hls.levels.length; i++) {
+      var h = hls.levels[i].height || 0;
+      if (h && h <= maxHeight && h >= bestH) { best = i; bestH = h; }
+      if ((hls.levels[i].height || 0) < (hls.levels[lowest].height || 0)) { lowest = i; }
+    }
+    return best >= 0 ? best : lowest;
+  }
+
   function setLevel(index) {
     if (mode !== 'hls' || !hls) { return; }
+    // Auto honours the quality setting; a manual choice overrides it
+    hls.autoLevelCapping = index < 0 ? capIndex() : -1;
     autoLevel = index < 0;
     hls.currentLevel = index;      // -1 = automatic (ABR)
     if (!autoLevel && hls.levels[index]) { levelHeight = hls.levels[index].height; }
@@ -292,6 +308,7 @@ var Player = (function () {
     init: init, play: play, stop: stop, levels: levels, setLevel: setLevel,
     currentLevelIndex: currentLevelIndex, qualityText: qualityText,
     togglePause: togglePause, isPaused: isPaused,
+    setMaxHeight: function (h) { maxHeight = +h || 0; },
     current: function () { return channel; },
     streamInfo: function () { return channel ? { index: streamIdx, total: channel.streams.length } : null; },
     unmute: function () { video.muted = false; }

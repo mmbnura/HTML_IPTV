@@ -130,7 +130,7 @@ Designed for TV remote navigation (↑ ↓ OK)
 | OK | Enter | Play channel / toggle fullscreen |
 | ▶❚❚ Play/Pause | P | Pause / resume (or focus the ▶ button on the video's bottom bar and press OK) |
 | BACK | Esc / Backspace | Exit fullscreen, close menu, go back |
-| CH+ / CH− | PgUp / PgDn | Page through lists, zap channels |
+| CH ∧ / CH ∨ | PgUp / PgDn | Next / previous channel (on the video or in fullscreen), page through lists |
 | 🔴 Red | F | Add / remove favorite |
 | 🟢 Green | Q | Quality menu |
 | 🟡 Yellow | S | Search |
@@ -174,6 +174,9 @@ js/data.js        iptv-org download, HLS stream filtering, search, filters
 js/vlist.js       Virtualised list (smooth with 10 000+ channels on TVs)
 js/player.js      hls.js / native HLS playback, recovery, quality control
 js/app.js         UI rendering, focus navigation, remote keys, fullscreen
+settings.html     Settings page (custom buttons, defaults)
+js/settings.js    Settings page logic and "press a button" assignment
+css/settings.css  Settings page styles
 lib/hls.min.js    Hls.js 1.5.20 (bundled, no CDN needed)
 ```
 
@@ -193,6 +196,27 @@ then open http://localhost:8080 (or the GitHub Pages URL on the TV browser).
 Note: when the page is served over HTTPS (GitHub Pages), plain `http://`
 streams are hidden because browsers block mixed content. Serving over
 plain HTTP on your local network shows more channels.
+
+⚙ Settings page
+
+A separate Settings page (⚙ Settings button next to Filter) keeps the player
+page uncluttered. Everything is saved in the browser of the TV.
+
+Remote buttons – assign your own button to Next channel, Previous channel,
+Play/Pause, Favorite and Fullscreen, game-style: select the action, press OK,
+then press the button you want. If the TV does not pass that button to web
+pages, the page says so after 10 seconds. Arrows, OK and Back can't be
+assigned. A button tester shows the code of every button the TV sends.
+
+Automatic quality – limit Auto to 1080p, 720p or 480p (data saver)
+
+↑ / ↓ change channel in fullscreen – on/off
+
+Open with – last used list, all channels or favorites
+
+Channel logos – turn off to save ~6 MB of downloads on slow TVs
+
+Reset – remove all favorites / restore default settings
 
 📡 IPTV Data Source
 
