@@ -86,8 +86,31 @@ var U = (function () {
   };
   function is(code, list) { return list.indexOf(code) !== -1; }
 
+  /* Buttons needed to move around the app; they can't be assigned to actions. */
+  var RESERVED = [37, 38, 39, 40, 13, 32, 27, 8, 10009, 461, 166];
+
+  var KEY_NAMES = {
+    427: 'CH ∧', 428: 'CH ∨', 33: 'Page Up / CH ∧', 34: 'Page Down / CH ∨',
+    403: 'Red', 404: 'Green', 405: 'Yellow', 406: 'Blue',
+    10252: 'Play/Pause', 415: 'Play', 19: 'Pause', 413: 'Stop', 417: 'Fast-forward', 412: 'Rewind',
+    10233: 'Next ⏭', 10232: 'Previous ⏮', 176: 'Next ⏭', 177: 'Previous ⏮', 179: 'Play/Pause',
+    457: 'Info', 458: 'Guide', 10133: 'Menu', 10073: 'Channel list', 10190: 'Pre-CH',
+    447: 'Volume +', 448: 'Volume −', 449: 'Mute',
+    37: '←', 38: '↑', 39: '→', 40: '↓', 13: 'OK / Enter', 32: 'Space',
+    27: 'Back / Esc', 8: 'Back / Backspace', 10009: 'Back', 461: 'Back', 166: 'Back'
+  };
+
+  function keyName(code, key) {
+    if (KEY_NAMES[code]) { return KEY_NAMES[code]; }
+    if (code >= 48 && code <= 57) { return 'Number ' + (code - 48); }
+    if (code >= 65 && code <= 90) { return 'Key ' + String.fromCharCode(code); }
+    if (key && key !== 'Unidentified' && key.length < 20) { return key; }
+    return 'Button';
+  }
+
   return {
     getJSON: getJSON, closest: closest, esc: esc, initials: initials,
-    pad2: pad2, each: each, autoScale: autoScale, K: K, is: is
+    pad2: pad2, each: each, autoScale: autoScale, K: K, is: is,
+    RESERVED: RESERVED, keyName: keyName
   };
 })();

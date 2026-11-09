@@ -19,7 +19,7 @@
     npName: $('npName'), qualityNow: $('qualityNow'), qualityBtn: $('qualityBtn'),
     qualityMenu: $('qualityMenu'), qualityList: $('qualityList'),
     searchBox: $('searchBox'), searchInput: $('searchInput'),
-    filterBtn: $('filterBtn'), filterLabel: $('filterLabel'),
+    filterBtn: $('filterBtn'), filterLabel: $('filterLabel'), settingsBtn: $('settingsBtn'),
     filterPanel: $('filterPanel'), filterTabs: $('filterTabs'), filterList: $('filterList'),
     statChannels: $('statChannels'), statCategories: $('statCategories'),
     clock: $('clock'), toast: $('toast')
@@ -27,7 +27,7 @@
 
   var app = {
     ready: false,
-    zone: 'cats',            // cats | chans | player | playbtn | quality | search | filterBtn | filter | menu
+    zone: 'cats',            // cats | chans | player | playbtn | quality | search | filterBtn | settingsBtn | filter | menu
     catMode: 'cats',         // cats | countries
     country: '',             // '' = all countries
     lang: '',                // '' = all languages
@@ -47,6 +47,30 @@
   };
 
   var catVL, chVL, fVL;
+  var settings = Store.getSettings();   // edited on settings.html
+
+  /* custom remote button -> action id (see Store.ACTIONS) */
+  function customAction(code) {
+    for (var id in settings.keys) {
+      if (settings.keys.hasOwnProperty(id) && settings.keys[id] === code) { return id; }
+    }
+    return null;
+  }
+
+  function runAction(id) {
+    if (id === 'next' || id === 'prev') {
+      if (!Player.current()) { toast('Start a channel first'); return; }
+      zap(id === 'next' ? 1 : -1);
+      if (!app.fullscreen) { toast('▶ ' + Player.current().name); }
+    } else if (id === 'playPause') {
+      togglePause();
+    } else if (id === 'favorite') {
+      toggleFavorite(!app.fullscreen && app.zone === 'chans' ? chVL.current() : Player.current());
+      if (app.fullscreen) { showOsd(); }
+    } else if (id === 'fullscreen') {
+      if (app.fullscreen) { exitFullscreen(); } else if (Player.current()) { enterFullscreen(); }
+    }
+  }
 
   /* Shown first in the country / language lists (most channels first within the group). */
   var PINNED_COUNTRIES = ['IN'];
@@ -224,6 +248,7 @@
     toggleClass(el.qualityBtn, 'focused', zone === 'quality');
     toggleClass(el.searchBox, 'focused', zone === 'search');
     toggleClass(el.filterBtn, 'focused', zone === 'filterBtn');
+    toggleClass(el.settingsBtn, 'focused', zone === 'settingsBtn');
   }
 
   function toggleClass(node, cls, on) {
@@ -659,11 +684,21 @@
 
     if (!app.ready) { return; }
 
+    // buttons assigned on the settings page win over the built-in ones
+    var custom = customAction(k);
+    if (custom && app.zone !== 'menu' && app.zone !== 'filter') {
+      runAction(custom);
+      e.preventDefault();
+      return;
+    }
+
     if (app.fullscreen) {
       if (U.is(k, K.PLAY_PAUSE)) { togglePause(); }
       else if (U.is(k, K.OK) || U.is(k, K.BACK) || U.is(k, K.BLUE)) { exitFullscreen(); }
-      else if (U.is(k, K.UP) || U.is(k, K.CH_UP)) { zap(-1); }
-      else if (U.is(k, K.DOWN) || U.is(k, K.CH_DOWN)) { zap(1); }
+      else if (U.is(k, K.CH_UP)) { zap(1); }       // CH ∧ = next channel
+      else if (U.is(k, K.CH_DOWN)) { zap(-1); }    // CH ∨ = previous channel
+      else if (U.is(k, K.UP) && settings.arrowZap) { zap(-1); }
+      else if (U.is(k, K.DOWN) && settings.arrowZap) { zap(1); }
       else if (U.is(k, K.RED)) { toggleFavorite(Player.current()); showOsd(); }
       else { showOsd(); handled = U.is(k, K.LEFT) || U.is(k, K.RIGHT); }
       if (handled) { e.preventDefault(); }
@@ -745,8 +780,8 @@
       else if (U.is(k, K.LEFT)) { setZone('chans'); }
       else if (U.is(k, K.DOWN)) { setZone(Player.current() ? 'playbtn' : 'quality'); }
       else if (U.is(k, K.UP)) { setZone('search'); }
-      else if (U.is(k, K.CH_UP)) { zap(-1); }
-      else if (U.is(k, K.CH_DOWN)) { zap(1); }
+      else if (U.is(k, K.CH_UP)) { zap(1); }
+      else if (U.is(k, K.CH_DOWN)) { zap(-1); }
       else { return false; }
       return true;
     }
@@ -777,6 +812,14 @@
       if (U.is(k, K.OK)) { openFilter(); }
       else if (U.is(k, K.DOWN)) { setZone('chans'); }
       else if (U.is(k, K.LEFT)) { setZone('search'); }
+      else if (U.is(k, K.RIGHT)) { setZone('settingsBtn'); }
+      else { return false; }
+      return true;
+    }
+    if (z === 'settingsBtn') {
+      if (U.is(k, K.OK)) { openSettings(); }
+      else if (U.is(k, K.DOWN)) { setZone('chans'); }
+      else if (U.is(k, K.LEFT)) { setZone('filterBtn'); }
       else if (U.is(k, K.RIGHT)) { setZone('player'); }
       else { return false; }
       return true;
@@ -815,6 +858,7 @@
     el.searchInput.addEventListener('focus', function () { setZone('search'); });
 
     el.filterBtn.addEventListener('click', function () { setZone('filterBtn'); openFilter(); });
+    el.settingsBtn.addEventListener('click', openSettings);
     el.filterTabs.addEventListener('click', function (e) {
       var t = U.closest(e.target, 'data-ft', el.filterTabs);
       if (!t) { return; }
@@ -832,6 +876,11 @@
   /* Boot                                                               */
   /* ------------------------------------------------------------------ */
 
+  function openSettings() {
+    Player.stop();
+    window.location.href = 'settings.html';
+  }
+
   function restore() {
     var s = Store.getState();
     if (s.country && Data.state.countryNames[s.country]) { app.country = s.country; }
@@ -841,6 +890,8 @@
     if (app.view.type === 'cat' && !Data.categoryCounts(filters())[app.view.id]) {
       app.view = { type: 'cat', id: 'all' };
     }
+    if (settings.startView === 'all') { app.view = { type: 'cat', id: 'all' }; app.pendingView = null; }
+    if (settings.startView === 'fav') { app.view = { type: 'fav' }; app.pendingView = null; }
     if (app.view.type === 'fav' && !Store.favoriteIds().length) {
       app.view = { type: 'cat', id: 'all' };
     }
@@ -899,6 +950,7 @@
       onClick: function (idx) { chooseFilterItem(idx); }
     });
 
+    Player.setMaxHeight(settings.maxQuality);
     Player.init(el.video, {
       status: setStatus,
       quality: updateQuality,
@@ -948,6 +1000,7 @@
         }
         app.pendingView = null;
         if (app.zone === 'filter') { renderFilter(); }
+        if (!settings.logos) { return; }
         Data.loadLogos(function () {
           chVL.refresh();
           updateNowPlaying();

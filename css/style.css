@@ -96,6 +96,7 @@ input { font: inherit; outline: none; }
 .filter-btn.active { background: #12324f; border-color: #2f6ea3; color: #bfe2ff; }
 .filter-btn.focused { background: #3ea6ff; color: #04121f; border-color: #9fd3ff; }
 .filter-label { overflow: hidden; text-overflow: ellipsis; }
+.settings-btn { margin-left: 0.6rem; }
 /* funnel icon drawn with CSS */
 .ico-filter {
   position: relative;
