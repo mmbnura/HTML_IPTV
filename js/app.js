@@ -13,6 +13,7 @@
     playerBox: $('playerBox'), video: $('video'),
     overlay: $('overlay'), spinner: $('spinner'), overlayMsg: $('overlayMsg'),
     ctrlBar: $('ctrlBar'), playBtn: $('playBtn'), playIcon: $('playIcon'),
+    prevBtn: $('prevBtn'), nextBtn: $('nextBtn'),
     ctrlName: $('ctrlName'), ctrlQuality: $('ctrlQuality'), liveBadge: $('liveBadge'),
     osd: $('osd'), osdNum: $('osdNum'), osdName: $('osdName'), osdMeta: $('osdMeta'),
     infoLogo: $('infoLogo'), infoName: $('infoName'), infoMeta: $('infoMeta'),
@@ -43,7 +44,8 @@
     nativeFs: false,
     menuIndex: 0,
     menuItems: [],
-    mutedNotice: false
+    mutedNotice: false,
+    ctrlIdx: 1               // focused button on the video bar: 0 previous, 1 play/pause, 2 next
   };
 
   var catVL, chVL, fVL;
@@ -243,7 +245,9 @@
     catVL.setActive(zone === 'cats');
     chVL.setActive(zone === 'chans');
     toggleClass(el.playerBox, 'focused', zone === 'player');
-    toggleClass(el.playBtn, 'focused', zone === 'playbtn');
+    toggleClass(el.prevBtn, 'focused', zone === 'playbtn' && app.ctrlIdx === 0);
+    toggleClass(el.playBtn, 'focused', zone === 'playbtn' && app.ctrlIdx === 1);
+    toggleClass(el.nextBtn, 'focused', zone === 'playbtn' && app.ctrlIdx === 2);
     toggleClass(el.body, 'ctrl-focus', zone === 'playbtn');
     toggleClass(el.qualityBtn, 'focused', zone === 'quality');
     toggleClass(el.searchBox, 'focused', zone === 'search');
@@ -506,6 +510,14 @@
     toggleClass(el.body, 'paused', paused);
     toggleClass(el.body, 'has-channel', !!Player.current());
     el.liveBadge.textContent = paused ? 'PAUSED' : 'LIVE';
+  }
+
+  /* ⏮ / ⏭ on the video bar (works in fullscreen too) */
+  function zapButton(dir) {
+    if (app.mutedNotice) { app.mutedNotice = false; Player.unmute(); }
+    if (!Player.current()) { toast('Choose a channel first'); return; }
+    zap(dir);
+    showOsd();
   }
 
   function togglePause() {
@@ -786,10 +798,17 @@
       return true;
     }
     if (z === 'playbtn') {
-      if (U.is(k, K.OK)) { togglePause(); }
+      if (U.is(k, K.OK)) {
+        if (app.ctrlIdx === 1) { togglePause(); } else { zapButton(app.ctrlIdx === 2 ? 1 : -1); }
+      }
       else if (U.is(k, K.UP)) { setZone('player'); }
       else if (U.is(k, K.DOWN)) { setZone('quality'); }
-      else if (U.is(k, K.LEFT)) { setZone('chans'); }
+      else if (U.is(k, K.LEFT)) {
+        if (app.ctrlIdx > 0) { app.ctrlIdx--; setZone('playbtn'); showOsd(); } else { app.ctrlIdx = 1; setZone('chans'); }
+      }
+      else if (U.is(k, K.RIGHT)) {
+        if (app.ctrlIdx < 2) { app.ctrlIdx++; setZone('playbtn'); showOsd(); }
+      }
       else { return false; }
       return true;
     }
@@ -841,6 +860,8 @@
     el.playerBox.addEventListener('dblclick', function (e) { e.preventDefault(); });
     // the control bar must not trigger the fullscreen toggle of the video
     el.ctrlBar.addEventListener('click', function (e) { e.stopPropagation(); });
+    el.prevBtn.addEventListener('click', function (e) { e.stopPropagation(); zapButton(-1); });
+    el.nextBtn.addEventListener('click', function (e) { e.stopPropagation(); zapButton(1); });
     el.playBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       if (app.mutedNotice) { app.mutedNotice = false; Player.unmute(); }

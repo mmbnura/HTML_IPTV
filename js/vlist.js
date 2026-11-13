@@ -27,6 +27,7 @@ function VList(container, opts) {
       self.render();
     }, 16);
   });
+  this.initPager();
   this.el.addEventListener('click', function (e) {
     var row = U.closest(e.target, 'data-index', self.el);
     if (!row) { return; }
@@ -34,6 +35,61 @@ function VList(container, opts) {
     self.opts.onClick(idx, e.target);
   });
 }
+
+/* ▲ / ▼ buttons next to the list (data-pager="<list id>"): click = one page,
+   resting the pointer on them keeps scrolling. */
+VList.prototype.initPager = function () {
+  var self = this;
+  this.pagers = [];
+  var btns = document.querySelectorAll('[data-pager="' + this.el.id + '"]');
+  for (var i = 0; i < btns.length; i++) {
+    (function (btn) {
+      var dir = parseInt(btn.getAttribute('data-dir'), 10);
+      var hold = null;
+      function stop() { clearTimeout(hold); hold = null; }
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        self.page(dir);
+      });
+      btn.addEventListener('mouseenter', function () {
+        stop();
+        hold = setTimeout(function repeat() {
+          if (!self.page(dir)) { return; }
+          hold = setTimeout(repeat, 700);
+        }, 900);
+      });
+      btn.addEventListener('mouseleave', stop);
+      self.pagers.push({ btn: btn, dir: dir });
+    })(btns[i]);
+  }
+};
+
+VList.prototype.updatePager = function () {
+  var top = this.el.scrollTop;
+  var max = this.el.scrollHeight - this.el.clientHeight;
+  for (var i = 0; i < this.pagers.length; i++) {
+    var p = this.pagers[i];
+    var off = p.dir < 0 ? top <= 0 : top >= max - 2;
+    p.btn.className = p.btn.className.replace(/\s?disabled/g, '') + (off ? ' disabled' : '');
+  }
+};
+
+/* scroll one page and keep the highlighted row on screen; false at the end */
+VList.prototype.page = function (dir) {
+  if (!this.items.length) { return false; }
+  var rh = this.rowHeight();
+  var h = this.el.clientHeight;
+  var before = this.el.scrollTop;
+  this.el.scrollTop = before + dir * Math.max(rh, Math.floor(h / rh) * rh - rh);
+  if (this.el.scrollTop === before) { return false; }
+  var first = Math.ceil(this.el.scrollTop / rh);
+  var last = Math.floor((this.el.scrollTop + h) / rh) - 1;
+  if (this.focus < first) { this.focus = first; }
+  if (this.focus > last) { this.focus = Math.max(first, last); }
+  this.render();
+  return true;
+};
 
 VList.prototype.rowHeight = function () {
   var root = parseFloat(document.documentElement.style.fontSize) || 20;
@@ -109,6 +165,7 @@ VList.prototype.render = function () {
     this.rows[idx] = row;
   }
   this.paintFocus();
+  this.updatePager();
 };
 
 VList.prototype.paintFocus = function () {
