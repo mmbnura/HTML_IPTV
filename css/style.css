@@ -173,8 +173,57 @@ input { font: inherit; outline: none; }
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
-.vlist::-webkit-scrollbar { width: 0.4rem; }
-.vlist::-webkit-scrollbar-thumb { background: #2a3548; border-radius: 0.2rem; }
+/* wide scrollbar so it can be grabbed with a TV pointer */
+.vlist::-webkit-scrollbar { width: 1.1rem; }
+.vlist::-webkit-scrollbar-track { background: #121a27; }
+.vlist::-webkit-scrollbar-thumb {
+  min-height: 3rem;
+  background: #3a4a63;
+  border-radius: 0.55rem;
+  border: 0.25rem solid #121a27;
+}
+.vlist::-webkit-scrollbar-thumb:hover { background: #4f6487; }
+
+/*
+ * The list box is pinned to its wrapper with absolute positioning. Older TV
+ * browsers don't always limit a flex child's height, which let the list grow
+ * past the screen so it never scrolled; absolute positioning works everywhere.
+ */
+.list-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.list-wrap .vlist {
+  position: absolute;
+  left: 0; right: 0;
+  top: 2rem; bottom: 2rem;
+}
+/* ▲ / ▼ page buttons (pointer / mouse users) */
+.page-btn {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #141c2a;
+  color: #8a96ab;
+  z-index: 2;
+}
+.page-btn.up { top: 0; border-bottom: 1px solid #1d2636; }
+.page-btn.down { bottom: 0; border-top: 1px solid #1d2636; }
+.page-btn:hover { background: #24304a; color: #fff; }
+.page-btn.disabled { opacity: 0.25; cursor: default; }
+.page-btn.disabled:hover { background: #141c2a; color: #8a96ab; }
+.ico-up, .ico-down {
+  display: block;
+  width: 0; height: 0;
+  border-style: solid;
+  border-color: transparent;
+}
+.ico-up { border-width: 0 0.6rem 0.6rem 0.6rem; border-bottom-color: currentColor; }
+.ico-down { border-width: 0.6rem 0.6rem 0 0.6rem; border-top-color: currentColor; }
 .vlist-spacer { width: 1px; }
 
 .row {
@@ -361,6 +410,30 @@ body.has-channel .player-box:hover .ctrl-bar { opacity: 1; visibility: visible; 
   border: 2px solid rgba(255, 255, 255, 0.35);
 }
 .play-btn:hover { background: rgba(255, 255, 255, 0.28); }
+.play-btn.small { width: 2.2rem; height: 2.2rem; margin: 0 0.4rem; }
+/* previous / next channel icons: triangle + bar */
+.ico-prev, .ico-next {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 0; height: 0;
+  margin-top: -0.4rem;
+  border-style: solid;
+  border-color: transparent;
+}
+.ico-next { margin-left: -0.35rem; border-width: 0.4rem 0 0.4rem 0.6rem; border-left-color: #fff; }
+.ico-prev { margin-left: -0.25rem; border-width: 0.4rem 0.6rem 0.4rem 0; border-right-color: #fff; }
+.ico-next:after, .ico-prev:after {
+  content: "";
+  position: absolute;
+  top: -0.4rem;
+  width: 0.15rem; height: 0.8rem;
+  background: #fff;
+}
+.ico-next:after { left: 0; }
+.ico-prev:after { left: -0.15rem; }
+.play-btn.focused .ico-next { border-left-color: #04121f; }
+.play-btn.focused .ico-prev { border-right-color: #04121f; }
+.play-btn.focused .ico-next:after, .play-btn.focused .ico-prev:after { background: #04121f; }
 .play-btn.focused {
   background: #3ea6ff;
   border-color: #9fd3ff;
@@ -636,7 +709,10 @@ body.fs .player-box video { object-fit: contain; }
 body.fs.osd-on .osd { display: flex; }
 body.fs.osd-on .player-box { cursor: default; }
 body.fs .toast { top: 2rem; }
-body.fs .ctrl-bar { height: 6rem; padding: 2rem 3rem 0; }
+body.fs .ctrl-bar { height: 7rem; padding: 2rem 3rem 0; }
+/* bigger buttons in fullscreen so they are easy to hit with a pointer */
+body.fs .play-btn { width: 3.6rem; height: 3.6rem; }
+body.fs .play-btn.small { width: 3.2rem; height: 3.2rem; margin: 0 0.6rem; }
 body.fs .ctrl-quality { display: none; }   /* quality indicator hidden in fullscreen */
 body.fs.paused .osd { display: flex; }
 

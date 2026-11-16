@@ -30,12 +30,20 @@
     <main class="layout">
       <section class="panel cat-panel">
         <div class="panel-title"><span id="catTitle">Categories</span></div>
-        <div id="catList" class="vlist"></div>
+        <div class="list-wrap">
+          <button class="page-btn up" type="button" data-pager="catList" data-dir="-1" title="Scroll up"><span class="ico-up"></span></button>
+          <div id="catList" class="vlist"></div>
+          <button class="page-btn down" type="button" data-pager="catList" data-dir="1" title="Scroll down"><span class="ico-down"></span></button>
+        </div>
       </section>
 
       <section class="panel ch-panel">
         <div class="panel-title"><span id="chTitle">Channels</span><span id="chCount" class="count"></span></div>
-        <div id="chList" class="vlist"></div>
+        <div class="list-wrap">
+          <button class="page-btn up" type="button" data-pager="chList" data-dir="-1" title="Scroll up"><span class="ico-up"></span></button>
+          <div id="chList" class="vlist"></div>
+          <button class="page-btn down" type="button" data-pager="chList" data-dir="1" title="Scroll down"><span class="ico-down"></span></button>
+        </div>
       </section>
 
       <section class="panel player-panel">
@@ -54,9 +62,11 @@
             </div>
           </div>
           <div id="ctrlBar" class="ctrl-bar">
+            <button id="prevBtn" class="play-btn small" type="button" title="Previous channel"><span class="ico-prev"></span></button>
             <button id="playBtn" class="play-btn" type="button" title="Play / Pause">
               <span id="playIcon" class="ico-pause"></span>
             </button>
+            <button id="nextBtn" class="play-btn small" type="button" title="Next channel"><span class="ico-next"></span></button>
             <span id="liveBadge" class="live-badge">LIVE</span>
             <span id="ctrlName" class="ctrl-name"></span>
             <span id="ctrlQuality" class="ctrl-quality"></span>
@@ -106,7 +116,11 @@
         <div class="modal-title">Filter channels</div>
         <div class="filter-body">
           <div id="filterTabs" class="filter-tabs"></div>
-          <div id="filterList" class="vlist filter-list"></div>
+          <div class="list-wrap filter-list">
+          <button class="page-btn up" type="button" data-pager="filterList" data-dir="-1" title="Scroll up"><span class="ico-up"></span></button>
+          <div id="filterList" class="vlist"></div>
+          <button class="page-btn down" type="button" data-pager="filterList" data-dir="1" title="Scroll down"><span class="ico-down"></span></button>
+        </div>
         </div>
         <div class="filter-foot">
           <span><i class="key">&#8593;&#8595;</i> Choose</span>

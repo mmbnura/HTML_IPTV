@@ -137,8 +137,11 @@ Designed for TV remote navigation (↑ ↓ OK)
 | 🔵 Blue | — | Fullscreen |
 | ↑ to search, → | ↑ to search, → | Focus the Filter button, OK opens the filter panel |
 
-Mouse / touch also work: click a channel to play, click ☆ to favorite, click the video for fullscreen,
-click the ▶/❚❚ button in the bar at the bottom of the video to pause or resume.
+Mouse / touch / TV pointer also work: click a channel to play, click ☆ to favorite, click the video for fullscreen.
+The bar at the bottom of the video has ⏮ previous channel, ▶/❚❚ pause/resume and ⏭ next channel
+(also in fullscreen; with the remote: ↓ from the video, then ← / →).
+Long lists have ▲ / ▼ buttons at the top and bottom: click to scroll a page, or rest the pointer
+on them to keep scrolling. The scrollbar is wide enough to grab with a TV pointer.
 
 🎚 Filters (Language & Country)
 
